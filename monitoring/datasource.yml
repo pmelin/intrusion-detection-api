@@ -1,0 +1,11 @@
+###################################################################
+# This file is loaded by grafana on the container creation and    #
+# points to the prometheus container as a data source for metrics #
+###################################################################
+
+datasources:
+  - name: PrometheusDS
+    access: proxy
+    type: prometheus
+    url: http://prometheus:9090
+    isDefault: true

@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+
+  #############################################
+  # FastAPI container with the prediction API #
+  # URL: http://localhost:8000/is_intrusion   #
+  #############################################
+  app:
+    build: .
+    container_name: app
+    ports:
+      - 8000:8000
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - DEPLOYMENT_AWS_BUCKET=${DEPLOYMENT_AWS_BUCKET}
+    # uncomment the volume setup to use the model file from the project
+    # instead of downloading from S3  
+    volumes:
+      - ./model/model.joblib:/tmp/model.joblib
+
+  #########################################################################
+  # Prometheus container that scrapes the api for metrics and stored them #
+  # URL: http://localhost:9090                                            #
+  #########################################################################
+  prometheus:
+    image: prom/prometheus:v2.43.0
+    restart: unless-stopped
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+
+  ###########################################################################################
+  # Grafana container that displays a custom dashboard using data retrieved from prometheus #
+  # URL: http://localhost:3000 (user: admin password: admin)                                #
+  ###########################################################################################
+  grafana:
+    image: grafana/grafana:8.5.22
+    restart: unless-stopped
+    user: "472"
+    container_name: grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - ./monitoring/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./monitoring/dashboard.yaml:/etc/grafana/provisioning/dashboards/main.yaml
+      - ./monitoring/dashboard.json:/var/lib/grafana/dashboards/main.json
+    environment:
+      # user and password = admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false

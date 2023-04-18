@@ -1,0 +1,18 @@
+###################################################################
+# This file is loaded by grafana on the container creation and    #
+# defines a folder where we can place the dashboard.json file to  #
+# have the dashboard automatically created                        #
+###################################################################
+
+apiVersion: 1
+
+providers:
+  - name: "Dashboard provider"
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

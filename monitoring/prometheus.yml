@@ -1,0 +1,26 @@
+#############################################################################
+# This file is loaded by the prometheus container on startup.               #
+# It defines the app container as a target for prometheus metrics scraping. #
+# The api is instrumented with prometheus_fastapi_instrumentator which adds #
+# a GET /metrics which prometheus calls and retireves the metrics.          #
+#############################################################################
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: "app"
+
+rule_files:
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "app"
+    dns_sd_configs:
+      - names: ["app"]
+        port: 8000
+        type: A
+        refresh_interval: 5s
